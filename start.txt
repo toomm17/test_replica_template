@@ -1,0 +1,8 @@
+.env файл оставь свой
+
+1) python -m venv venv
+2) cd venv\Scripts
+3) activate
+4) cd ..
+5) cd ..
+6) pip install -r requirements.txt  
