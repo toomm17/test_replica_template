@@ -1,0 +1,6 @@
+{
+    "threads": {
+        "list": ["first_name", "second_name", "third_name"],
+        "maxRunning": 4
+    }
+}
