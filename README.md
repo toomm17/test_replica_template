@@ -23,14 +23,32 @@ ETL4Hadoop - это проект по репликации данных.
     Арихитектура config.json (будет обновляться):
     {
         'threads': {
-            'list': ['first_name', 'second_name', 'third_name'],
-            'maxRunning': 4
+            'list': [
+                {
+                    "name": "first_name",
+                    "insert_row_in_table": true,
+                    "is_single_run": true
+                },
+                {
+                    "name": "second_name",
+                    "insert_row_in_table": false,
+                    "is_single_run": true
+                },
+                {
+                    "name": "third_name",
+                    "insert_row_in_table": false,
+                    "is_single_run": false
+                }
+            ],
         }
     }
 
+    name - Имя потока
+    insert_row_in_table - Нужно ли перед стартом потока, добавить запись в таблицу (скорее всего изменится)
+    is_single_run - Запуск потока будет однопоточно/паралелльно
+    
     Ограничения:
         list - список не может быть пустым
-        maxRunning > 0
 
     2) Реализация получения данных из config.json средствами python - модуль json.
 
