@@ -3,3 +3,4 @@
 /.pytest_cache
 .env
 py_test_results.xml
+/.idea
