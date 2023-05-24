@@ -1,14 +1,12 @@
 import psycopg2
 
 
-
-
 def have_table_in_db(table_name: str):
-    conn = psycopg2.connect(dbname='postgres',
-                            user='psiko',
-                            password='psikod',
-                            host='10.55.71.18',
-                            port='5432')
+    conn = psycopg2.connect(dbname='POSTGRES_DB_NAME',
+                            user='POSTGRES_USER',
+                            password='POSTGRES_PASSWORD',
+                            host='POSTGRES_HOST',
+                            port='POSTGRES_PORT')
 
     cursor = conn.cursor()
 
@@ -26,11 +24,11 @@ def have_table_in_db(table_name: str):
     print('Подключение закрыто')
 
 def insert_into_table(values: tuple):
-    conn = psycopg2.connect(dbname='postgres',
-                            user='psiko',
-                            password='psikod',
-                            host='10.55.71.18',
-                            port='5432')
+    conn = psycopg2.connect(dbname='POSTGRES_DB_NAME',
+                            user='POSTGRES_USER',
+                            password='POSTGRES_PASSWORD',
+                            host='POSTGRES_HOST',
+                            port='POSTGRES_PORT')
     print('Подключение установлено')
     cursor = conn.cursor()
 
