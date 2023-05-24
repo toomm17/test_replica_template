@@ -4,7 +4,7 @@ import pathlib
 
 def get_json_data():
     """
-        Фикстура для получения имен потоков из json конфига
+        Функция для получения данных в config.json
     """
     json_config_path = pathlib.Path('config.json')
 
