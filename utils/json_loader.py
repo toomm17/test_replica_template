@@ -2,12 +2,10 @@ import json
 import pathlib
 
 
-def get_json_data():
+def get_json_data(json_path: str):
     """
         Функция для получения данных в config.json
     """
-    json_config_path = pathlib.Path('config.json')
-
-    with open(json_config_path) as file:
+    with open(json_path) as file:
         data = json.load(file)
         return data

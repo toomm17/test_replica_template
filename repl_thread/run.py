@@ -1,101 +1,58 @@
-import json
-import time
-import threading
+import os 
 
-from repl_thread.consts import (
-    CURL_COMMAND,
-    CurlFlags,
-    CurlUrls,
-    ThreadCtlStates,
-    ThreadOrcherstratorStates
-)
+import requests
+
 from utils.cmd import run_command
+from utils.json_loader import get_json_data
 
 
-class SingleStartThrByName:
-    """
-        Класс для последовательного запуска потока
-    """
+class ReplicationThread:
 
-    def __init__(self, thr_name: str) -> None:
-        self.thr_name = thr_name
+    HOST = 'http://ctl-dev.dev.df.sbrf.ru:8080/'
+    RUN = HOST + 'v1/api/wf/sched/name/{}'
+    STATS = HOST + 'v1/api/loading/filtered-compact?wfNamesLike=%5B%22{}%22%5D'
+    PARAMFILE_PATH = HOST + 'v1/api/wf/name/{}'
 
-        self.start_thr_command = CURL_COMMAND.format(
-            url=CurlUrls.START.format(self.thr_name),
-            flags=CurlFlags.START
+    def __init__(self, name: str):
+        self.name = name
+
+    def _parse_paramfile_dict(self, params):
+        # TODO Filter
+        for param in params:
+            paramfile_path = param['prior_value']
+            if paramfile_path.endswith('.json'):
+                return paramfile_path
+        
+    def _get_paramfile_path(self):
+        response = requests.get(self.PARAMFILE_PATH.format(self.name))
+        thread_params_json = response.json()
+        params = thread_params_json[0].get('param')
+        return self._parse_paramfile_dict(params)
+            
+    def get_tables_name(self, paramfile_path: str):
+        hdfs_copy_to_local = run_command('hdfs dfs -copyToLocal ' + paramfile_path)
+
+        tmp_dict = {}
+        if hdfs_copy_to_local['returncode'] == 0:
+            tmp_dict = get_json_data(os.path.basename(paramfile_path))
+
+        tables = [item['bd_table_name'] for item in tmp_dict['table_list']]
+        return tables
+
+    def get_stats(self):
+        response = requests.get(self.STATS.format(self.name))
+        return response.json()
+
+    def run(self) -> dict:
+        response = requests.post(
+            self.RUN.format(self.name),
+            headers={'Content-Type': 'application/json'},
+            data='{}'
         )
-        self.get_thrs_history = CURL_COMMAND.format(
-            url=CurlUrls.GET_ALL_THREADS.format(self.thr_name),
-            flags=CurlFlags.GET_ALL_THREADS
-        )
-        
-    @staticmethod
-    def get_thr_loading_id(output: str):
-        """
-            Получаем loading_id после успешного запуска потока
-            Получаем output в формате: TODO добавить формат
-        """
-        loading_id = output.split('\\n')[-1]
-        loading_id_string = loading_id.split(',')[-1].replace("]'", '')
-        return loading_id_string[1:-1]
-    
-    @staticmethod
-    def get_thr_info_by_loading_id(all_thrs: dict, loading_id: int) -> dict:
-        """
-            Получаем информацию о текущем запуске потока из истории запуска всех потоков.
-        """
-        for item in all_thrs['items']:
-            if item['id'] == loading_id:
-                return item
+        loading_id = response.text.split(',')[-1].replace("]'", '')
+        return {
+            'status_code': response.status_code,
+            'loading_id': loading_id[1:-1]
+        }
 
-        return {}
-    
-    def thr_dict_asserter(self, thr_info: dict, loading_id: int):
-        """
-            Проверяем, что поток завершился успешно
-        """
-        assert thr_info['ctlState'] == ThreadCtlStates.COMPLETED
-        assert thr_info['orcherstratorState'] == ThreadOrcherstratorStates.SUCCESS
-        assert thr_info['id'] == loading_id
-        assert thr_info['workflowName'] == self.thr_name
 
-    def get_thr_info(self, loading_id: int) -> dict:
-        """
-            Запускаем команду, которая получают всю историю запуска потоков
-        """
-        all_thrs_output = run_command(self.get_thrs_history)
-        all_thrs_dict = json.loads(all_thrs_output.decode('utf-8'))
-        return self.get_thr_info_by_loading_id(all_thrs_dict, int(loading_id))
-
-    def thr_still_running(self, thr_info: dict) -> bool:
-        """
-            Проверяем состояния потока
-        """
-        if thr_info and thr_info['ctlState'] == ThreadCtlStates.ACTIVE \
-            and thr_info['orcherstratorState'] == ThreadOrcherstratorStates.RUNNING:
-            return True
-        
-        return False
-
-    def start_thr_by_name(self) -> None:
-        output = run_command(self.start_thr_command)
-        loading_id = self.get_thr_loading_id(str(output))
-
-        thr_info = self.get_thr_info(loading_id)
-
-        while self.thr_still_running(thr_info):
-            time.sleep(25)
-            thr_info = self.get_thr_info(loading_id)
-
-        self.thr_dict_asserter(thr_info)
-        
-
-class MultiStartThrByName(threading.Thread):
-    def __init__(self, thr_name: str):
-        self.thr_name = thr_name
-        super().__init__()
-
-    def run(self):
-        th = SingleStartThrByName(self.thr_name)
-        th.start_thr_by_name()
-    

@@ -5,12 +5,13 @@
 import subprocess
 
 
-def run_command(command: str) -> bytes:
+def run_command(command: str) -> dict:
     sub_popen = subprocess.Popen(
         command,
         stdout=subprocess.PIPE,
         shell=True
-    )
-    output, error = sub_popen.communicate()
-    if error is None:
-        return output
+    )    
+    bytes_out, bytes_err = sub_popen.communicate()
+    out = str(bytes_out).rstrip()
+    err = str(bytes_err).rstrip()    
+    return {'returncode': sub_popen.returncode, 'out': out, 'err': err}

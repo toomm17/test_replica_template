@@ -1,17 +1,8 @@
-import os
-
-import pytest
 import psycopg2
 
 import db_config
-import utils
 
 
-json_data = utils.get_json_data()
-thrs_list = json_data['threads']['list']
-
-
-@pytest.fixture()
 def postgres_cursor():
     """
         Фикстура для получения коннекта к постгресу
@@ -25,12 +16,4 @@ def postgres_cursor():
         port=db_config.POSTGRES_PORT
     )
     cursor = conn.cursor()
-    yield cursor
-    cursor.close()
-    conn.close()
-
-
-@pytest.fixture()
-def config():
-    json_data = utils.get_json_data(os.path.abspath('config.json'))
-    return json_data['threads']
+    return cursor

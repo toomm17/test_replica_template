@@ -1,3 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="0.099" timestamp="2023-05-01T16:49:04.113665" hostname="KARPINSKY-NB"><testcase classname="tests.test_postgres" name="test_curl" file="tests\test_postgres.py" line="15" time="0.083"><system-err>--------------------------------- Captured Err ---------------------------------
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="0.033" timestamp="2023-05-24T22:16:25.257243" hostname="KARPINSKY-NB"><testcase classname="tests.test_start_thread" name="test_run_thread_new" file="tests\test_start_thread.py" line="8" time="0.002"><system-err>--------------------------------- Captured Err ---------------------------------
 
 </system-err></testcase></testsuite></testsuites>

@@ -1,24 +1,33 @@
-"""
-    Тесты для запуска потока
-    TODO:
-        В файле желательно оставить только тесты 
-"""
-from repl_thread.run import SingleStartThrByName, MultiStartThrByName
+import os
+import threading
+from multiprocessing.dummy import Pool
+
+from repl_thread.run import ReplicationThread
+from utils.db import postgres_cursor
 
 
-def test_run_thread_new(repl_thr_list):
-    for thr in repl_thr_list:
-        if thr['insert_row_in_table']:
-            # TODO INSERT ROW IN TABLE
-            pass
+def run_thread(thread: dict):
+    thr = ReplicationThread(thread['name'])
+    postgres_cursor = postgres_cursor()
+    
+    if thread['insert_row_in_table']:
+        paramfile_path = thr._get_paramfile_path()
+        tables_name = thr.get_tables_name(paramfile_path)
+        # postgres_cursor.execute(....format(table_name=tables_name[0]))
 
-        if thr['is_single_run'] is False:
-            thr = MultiStartThrByName(thr['name'])
-            thr.start()
+    result = thr.run()
+    return result
 
-        if thr['is_single_run'] is True:
-            thr = SingleStartThrByName(thr['name'])
-            thr.start()
+
+def test_run_thread_new(config, postgres_cursor):
+    workers = config['workers']
+    thread_list = config['list']
+
+    pool = Pool(workers)
+    result = pool.map(run_thread, thread_list)
+    print(result)
+
+
 
 
 
