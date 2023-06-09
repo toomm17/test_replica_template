@@ -43,7 +43,7 @@ class ReplicationThread:
         response = requests.get(self.STATS.format(self.name))
         return response.json()
 
-    def get_thread_state(self, state_name: str, loading_id: int):
+    def get_state(self, state_name: str, loading_id: int):
         all_thread_stats = self.get_stats()
         for item in all_thread_stats['items']:
             if item['id'] == loading_id:
