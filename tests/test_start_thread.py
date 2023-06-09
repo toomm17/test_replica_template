@@ -1,9 +1,45 @@
-import os
-import threading
+import time
+import random
 from multiprocessing.dummy import Pool
 
 from repl_thread.run import ReplicationThread
 from utils.db import postgres_cursor
+
+
+class ThreadRunManager:
+
+    ORCHESTRATOR_RUNNING_STATES = ('RUNNING', 'START')
+
+    def __init__(self, thread: dict):
+        self.thread = ReplicationThread(thread['name'])
+        self.run_with_insert = self.thread['insert_row_in_table']
+
+    def ctl_state(self, loading_id: int):
+        return self.thread.get_thread_state('ctlState', loading_id)
+    
+    def orchestrator_state(self, loading_id: int):
+        return self.thread.get_thread_state('orchestratorState', loading_id)
+        
+    def run_thread(self):
+        thread_loading_id = self.thread.run()
+
+        while self.ctl_state(thread_loading_id) == 'ACTIVE':
+            if self.orchestrator_state(thread_loading_id) in self.ORCHESTRATOR_RUNNING_STATES:
+                print(self.thread.name, ' активен')
+                time.sleep(random.randint(10, 20))
+        
+        thread_state = self.ctl_state(thread_loading_id)
+        log_string = '{name} закончил работу с состоянием {state}'.format(
+            name=self.thread.name, state=thread_state
+        )
+        print(log_string)
+
+
+    def run_thread_with_insert(self):
+        pass
+
+    def run_thread_without_insert(self):
+        pass
 
 
 def run_thread(thread: dict):
@@ -22,10 +58,15 @@ def run_thread(thread: dict):
 def test_run_thread_new(config, postgres_cursor):
     workers = config['workers']
     thread_list = config['list']
+    if workers == 1:
+        for thread_name in thread_list:
+            run_thread(thread_name)
+    else:
+        pool = Pool(workers)
+        result = pool.map(run_thread, thread_list)
+        
+        print(result)
 
-    pool = Pool(workers)
-    result = pool.map(run_thread, thread_list)
-    print(result)
 
 
 

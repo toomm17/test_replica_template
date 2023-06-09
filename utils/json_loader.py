@@ -1,5 +1,4 @@
 import json
-import pathlib
 
 
 def get_json_data(json_path: str):
